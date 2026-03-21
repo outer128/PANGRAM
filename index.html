@@ -37,7 +37,6 @@
     user-select: none;
     transition: 0.1s;
   }
-  /* ボタンが押された状態（除外状態） */
   .btn.active {
     background-color: #000;
     color: white;
@@ -68,6 +67,22 @@
   }
   #reset-btn:hover {
     background-color: #444;
+  }
+  .random-option {
+    font-size: 1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0f0f0;
+    padding: 8px 15px;
+    border-radius: 20px;
+    user-select: none;
+  }
+  .random-option input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
   }
   #result-info {
     font-size: 1.1em;
@@ -103,6 +118,13 @@
 </div>
 
 <div id="result-info">結果: <span id="result-count">0</span>件</div>
+
+<div style="margin-bottom: 15px;">
+  <label class="random-option">
+    <input type="checkbox" id="random-toggle"> 結果をランダムな順で表示する
+  </label>
+</div>
+  
 <div id="word-list">辞書ファイル（buta014.dic）を読み込み中...</div>
 
 <script>
@@ -191,6 +213,25 @@
     });
     updateWordList();
   };
+
+  // ランダムチェックボックスの変更時
+  document.getElementById('random-toggle').onchange = () => {
+    updateWordList();
+  };
+
+  // 配列をシャッフルする関数
+  function shuffleArray(array) {
+    const clone = [...array];
+    for (let i = clone.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [clone[i], clone[clone[j]]] = [clone[j], clone[i]];
+      // 下記は分割代入での入れ替え
+      let temp = clone[i];
+      clone[i] = clone[j];
+      clone[j] = temp;
+    }
+    return clone;
+  }
 
 
   // 単語リストのフィルタリングと表示更新
