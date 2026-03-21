@@ -93,22 +93,6 @@
     border-radius: 4px;
     border: 1px solid #ccc;
   }
-  .random-option {
-    font-size: 1em;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #f0f0f0;
-    padding: 8px 15px;
-    border-radius: 20px;
-    user-select: none;
-  }
-  .random-option input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-  }
   #result-info {
     font-size: 1.1em;
     margin-bottom: 10px;
@@ -132,7 +116,7 @@
 
 <h2>50音除外検索</h2>
 <p>ボタンを押すと、その文字を<strong>含まない</strong>単語のみを抽出します。（複数選択可能）</p>
-<small>※あらかじめ「文字の重複がある」「ー（伸ばし棒）を含む」「濁音・半濁音を含む」言葉は辞書から除外されています。</small></p>
+<p><small>※あらかじめ「文字の重複がある」「ー（伸ばし棒）を含む」「濁音・半濁音を含む」言葉は辞書から除外されています。</small></p>
 
 <div class="grid-container">
   <div id="kana-grid"></div>
@@ -151,7 +135,7 @@
     </label>
   </div>
 
-<div class="option-item">
+  <div class="option-item">
     <select id="length-filter">
       <option value="all">すべて</option>
       <option value="2">2</option>
@@ -171,7 +155,7 @@
 <div id="word-list">辞書ファイル（buta014.dic）を読み込み中...</div>
 
 <script>
-  // 50音の配列（空欄は null）
+  // 50音の配列
   const kanaList = [
     'ん', 'わ', 'ら', 'や', 'ま', 'は', 'な', 'た', 'さ', 'か', 'あ',
     null, null, 'り', null, 'み', 'ひ', 'に', 'ち', 'し', 'き', 'い',
@@ -180,12 +164,9 @@
     null, 'を', 'ろ', 'よ', 'も', 'ほ', 'の', 'と', 'そ', 'こ', 'お'
   ];
 
-  // 除外する文字を保持するセット
   const excludedKana = new Set();
   let dictionary = [];
 
-
-  // 辞書ファイルの読み込みと事前フィルタリング
   async function loadDictionary() {
     try {
       const response = await fetch('buta014.dic');
@@ -195,33 +176,24 @@
       const decoder = new TextDecoder('shift_jis'); 
       const text = decoder.decode(buffer);
       
-      // 改行で分割し、条件に合わないものをあらかじめ除外する
       dictionary = text.split(/\r?\n/)
         .map(w => w.trim())
         .filter(w => w.length > 0)
         .filter(w => {
-          // 1. 「ー（伸ばし棒）」を含む言葉を除外
           if (w.includes('ー')) return false;
-
-          // 2. 濁音・半濁音を含む言葉を除外
           if (/[がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ]/.test(w)) return false;
-
-          // 3. 同じひらがなが重複して使われている言葉を除外
           const chars = w.split('');
-          const uniqueChars = new Set(chars);
-          if (uniqueChars.size !== chars.length) return false;
-
+          if (new Set(chars).size !== chars.length) return false;
           return true;
         });
       
       updateWordList();
     } catch (error) {
-      document.getElementById('word-list').textContent = '辞書の読み込みに失敗しました。buta014.dic が正しい場所に配置されているか確認してください。';
+      document.getElementById('word-list').textContent = '辞書の読み込みに失敗しました。';
       console.error('Fetch error:', error);
     }
   }
 
-  // 50音ボタンの生成
   function createGrid() {
     const grid = document.getElementById('kana-grid');
     kanaList.forEach(kana => {
@@ -245,21 +217,15 @@
     });
   }
 
-
-  // リセット機能
   document.getElementById('reset-btn').onclick = () => {
     excludedKana.clear();
-    // すべてのボタンから active クラスを消す
-    document.querySelectorAll('.btn.active').forEach(btn => {
-      btn.classList.remove('active');
-    });
+    document.querySelectorAll('.btn.active').forEach(btn => btn.classList.remove('active'));
     updateWordList();
   };
 
-  // ランダムチェックボックスの変更時
+  // ★重要：即時反映のためのイベントリスナー
   document.getElementById('random-toggle').onchange = () => updateWordList();
   document.getElementById('length-filter').onchange = () => updateWordList();
-  };
 
   // 配列をシャッフルする関数
   function shuffleArray(array) {
@@ -273,8 +239,6 @@
     return clone;
   }
 
-
-  // 単語リストのフィルタリングと表示更新
   function updateWordList() {
     const listContainer = document.getElementById('word-list');
     const countContainer = document.getElementById('result-count');
@@ -289,34 +253,33 @@
       return;
     }
 
-    // 押されたボタンのひらがなを「1つも含まない」単語だけを残す
+    // フィルタリング
     let filtered = dictionary.filter(word => {
+      // 除外文字のチェック
       for (const kana of excludedKana) {
-        if (word.includes(kana)) {
-          return false;
-        }
+        if (word.includes(kana)) return false;
       }
       
-      // 文字数チェック
+      // 文字数のチェック
       if (lengthVal !== 'all') {
         const targetLen = parseInt(lengthVal);
         if (targetLen === 10) {
-          if (word.length < 10) return false; // 10以上
+          if (word.length < 10) return false;
         } else {
-          if (word.length !== targetLen) return false; // 指定文字数と一致
+          if (word.length !== targetLen) return false;
         }
       }
       
       return true;
     });
 
+    // シャッフル
     if (isRandom && filtered.length > 0) {
       filtered = shuffleArray(filtered);
     }
 
     countContainer.textContent = filtered.length.toLocaleString();
 
-    // ブラウザのフリーズを防ぐため、表示上限を最大2000件に設定
     const fragment = document.createDocumentFragment();
     const displayLimit = Math.min(filtered.length, 2000); 
     
@@ -329,17 +292,15 @@
     
     listContainer.appendChild(fragment);
     
-    // 上限を超えた場合のメッセージ
     if (filtered.length > displayLimit) {
       const moreMsg = document.createElement('div');
       moreMsg.className = 'word-item';
-      moreMsg.textContent = `...他 ${filtered.length - displayLimit} 件（※動作を軽くするため表示上限を2000件にしています）`;
+      moreMsg.textContent = `...他 ${filtered.length - displayLimit} 件（表示上限2000件）`;
       moreMsg.style.color = '#888';
       listContainer.appendChild(moreMsg);
     }
   }
 
-  // 初期化実行
   createGrid();
   loadDictionary();
 </script>
