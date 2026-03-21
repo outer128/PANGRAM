@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>50音除外検索（豚辞書）</title>
+<style>
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #333;
+  }
+  .grid-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  #kana-grid {
+    display: grid;
+    /* 5列のグリッドを作成 */
+    grid-template-columns: repeat(5, 50px);
+    gap: 8px;
+  }
+  .btn {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border: 2px solid #ccc;
+    background-color: #fff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: 0.1s;
+  }
+  /* ボタンが押された状態（除外状態） */
+  .btn.active {
+    background-color: #ff6b6b;
+    color: white;
+    border-color: #ff6b6b;
+  }
+  .btn:active {
+    transform: scale(0.95);
+  }
+  .btn.empty {
+    visibility: hidden; /* 空白マス用 */
+  }
+  #result-info {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+  #word-list {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+  }
+  .word-item {
+    padding: 4px 0;
+    border-bottom: 1px dashed #eee;
+  }
+</style>
+</head>
+<body>
+
+<h2>50音除外検索（豚辞書）</h2>
+<p>ボタンを押して赤色にすると、その文字を<strong>含まない</strong>単語のみを抽出します。（複数選択可能）</p>
+
+<div class="grid-container">
+  <div id="kana-grid"></div>
+</div>
+
+<div id="result-info">結果: <span id="result-count">0</span>件</div>
+<div id="word-list">辞書ファイル（buta014.dic）を読み込み中...</div>
+
+<script>
+  // 50音の配列（空欄は null）
+  const kanaList = [
+    'あ', 'い', 'う', 'え', 'お',
+    'か', 'き', 'く', 'け', 'こ',
+    'さ', 'し', 'す', 'せ', 'そ',
+    'た', 'ち', 'つ', 'て', 'と',
+    'な', 'に', 'ぬ', 'ね', 'の',
+    'は', 'ひ', 'ふ', 'へ', 'ほ',
+    'ま', 'み', 'む', 'め', 'も',
+    'や', null, 'ゆ', null, 'よ',
+    'ら', 'り', 'る', 'れ', 'ろ',
+    'わ', null, null, null, 'を',
+    'ん', null, null, null, null
+  ];
+
+  // 除外する文字を保持するセット
+  const excludedKana = new Set();
+  let dictionary = [];
+
+  // 辞書ファイルの読み込み
+  async function loadDictionary() {
+    try {
+      // 同一階層にある buta014.dic を取得
+      const response = await fetch('buta014.dic');
+      if (!response.ok) throw new Error('Network response was not ok');
+      
+      const buffer = await response.arrayBuffer();
+      
+      // 辞書の文字コードを指定（テキストファイルがShift_JISの場合は 'shift_jis'、UTF-8なら 'utf-8' に変更）
+      // 一般的な .dic ファイルは Shift_JIS が多いためデフォルトで指定しています。
+      // もし文字化けする場合はここを 'utf-8' に書き換えてください。
+      const decoder = new TextDecoder('shift_jis'); 
+      const text = decoder.decode(buffer);
+      
+      // 改行で分割して配列化し、空行を削除
+      dictionary = text.split(/\r?\n/).map(w => w.trim()).filter(w => w.length > 0);
+      
+      updateWordList();
+    } catch (error) {
+      document.getElementById('word-list').textContent = '辞書の読み込みに失敗しました。buta014.dic が正しい場所に配置されているか確認してください。';
+      console.error('Fetch error:', error);
+    }
+  }
+
+  // 50音ボタンの生成
+  function createGrid() {
+    const grid = document.getElementById('kana-grid');
+    kanaList.forEach(kana => {
+      const div = document.createElement('div');
+      if (kana) {
+        div.className = 'btn';
+        div.textContent = kana;
+        div.onclick = () => {
+          div.classList.toggle('active');
+          if (excludedKana.has(kana)) {
+            excludedKana.delete(kana); // すでに除外されていれば解除
+          } else {
+            excludedKana.add(kana);    // 除外リストに追加
+          }
+          updateWordList(); // 表示を随時更新
+        };
+      } else {
+        // 「や行」「わ行」などの空白マス
+        div.className = 'btn empty';
+      }
+      grid.appendChild(div);
+    });
+  }
+
+  // 単語リストのフィルタリングと表示更新
+  function updateWordList() {
+    const listContainer = document.getElementById('word-list');
+    const countContainer = document.getElementById('result-count');
+    
+    listContainer.innerHTML = '';
+
+    if (dictionary.length === 0) {
+      listContainer.textContent = 'データがありません。';
+      return;
+    }
+
+    // 押されたボタンのひらがなを「1つも含まない」単語だけを残す
+    const filtered = dictionary.filter(word => {
+      for (const kana of excludedKana) {
+        if (word.includes(kana)) {
+          return false; // 含まれていたら除外
+        }
+      }
+      return true; // 含まれていなければOK
+    });
+
+    countContainer.textContent = filtered.length;
+
+    // 件数が多いとブラウザがフリーズするため、表示上限を設ける（最大2000件）
+    const fragment = document.createDocumentFragment();
+    const displayLimit = Math.min(filtered.length, 2000); 
+    
+    for (let i = 0; i < displayLimit; i++) {
+      const div = document.createElement('div');
+      div.className = 'word-item';
+      div.textContent = filtered[i];
+      fragment.appendChild(div);
+    }
+    
+    listContainer.appendChild(fragment);
+    
+    // 上限を超えた場合のメッセージ
+    if (filtered.length > displayLimit) {
+      const moreMsg = document.createElement('div');
+      moreMsg.className = 'word-item';
+      moreMsg.textContent = `...他 ${filtered.length - displayLimit} 件（※動作を軽くするため表示上限を2000件にしています）`;
+      moreMsg.style.color = '#888';
+      listContainer.appendChild(moreMsg);
+    }
+  }
+
+  // 初期化実行
+  createGrid();
+  loadDictionary();
+</script>
+
+</body>
+</html>
