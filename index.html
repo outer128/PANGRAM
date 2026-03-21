@@ -68,6 +68,31 @@
   #reset-btn:hover {
     background-color: #444;
   }
+  .options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  .option-item {
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0f0f0;
+    padding: 8px 15px;
+    border-radius: 20px;
+    width: fit-content;
+    user-select: none;
+  }
+  .option-item input, .option-item select {
+    cursor: pointer;
+  }
+  select {
+    padding: 2px 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
   .random-option {
     font-size: 1em;
     cursor: pointer;
@@ -124,6 +149,23 @@
     <input type="checkbox" id="random-toggle"> 結果をランダムな順で表示する
   </label>
 </div>
+
+<div class="option-item">
+    <select id="length-filter">
+      <option value="all">すべて</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10以上</option>
+    </select>
+    文字の単語を表示する
+  </div>
+</div>
   
 <div id="word-list">辞書ファイル（buta014.dic）を読み込み中...</div>
 
@@ -168,7 +210,6 @@
           const uniqueChars = new Set(chars);
           if (uniqueChars.size !== chars.length) return false;
 
-          // 上記の条件をすべてクリアしたものだけを残す
           return true;
         });
       
@@ -239,6 +280,7 @@
     const listContainer = document.getElementById('word-list');
     const countContainer = document.getElementById('result-count');
     const isRandom = document.getElementById('random-toggle').checked;
+    const lengthVal = document.getElementById('length-filter').value;
     
     listContainer.innerHTML = '';
 
@@ -248,19 +290,30 @@
       return;
     }
 
-    if (isRandom && filtered.length > 0) {
-      filtered = shuffleArray(filtered);
-    }
-
     // 押されたボタンのひらがなを「1つも含まない」単語だけを残す
-    const filtered = dictionary.filter(word => {
+    let filtered = dictionary.filter(word => {
       for (const kana of excludedKana) {
         if (word.includes(kana)) {
           return false;
         }
       }
+      
+      // 文字数チェック
+      if (lengthVal !== 'all') {
+        const targetLen = parseInt(lengthVal);
+        if (targetLen === 10) {
+          if (word.length < 10) return false; // 10以上
+        } else {
+          if (word.length !== targetLen) return false; // 指定文字数と一致
+        }
+      }
+      
       return true;
     });
+
+    if (isRandom && filtered.length > 0) {
+      filtered = shuffleArray(filtered);
+    }
 
     countContainer.textContent = filtered.length;
 
