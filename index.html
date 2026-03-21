@@ -144,11 +144,12 @@
 
 <div id="result-info">結果: <span id="result-count">0</span>件</div>
 
-<div style="margin-bottom: 15px;">
-  <label class="random-option">
-    <input type="checkbox" id="random-toggle"> 結果をランダムな順で表示する
-  </label>
-</div>
+<div class="options-container">
+  <div style="margin-bottom: 5px;">
+    <label class="option-item">
+      <input type="checkbox" id="random-toggle"> 結果をランダムな順で表示する
+    </label>
+  </div>
 
 <div class="option-item">
     <select id="length-filter">
@@ -256,8 +257,8 @@
   };
 
   // ランダムチェックボックスの変更時
-  document.getElementById('random-toggle').onchange = () => {
-    updateWordList();
+  document.getElementById('random-toggle').onchange = () => updateWordList();
+  document.getElementById('length-filter').onchange = () => updateWordList();
   };
 
   // 配列をシャッフルする関数
@@ -265,8 +266,6 @@
     const clone = [...array];
     for (let i = clone.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [clone[i], clone[clone[j]]] = [clone[j], clone[i]];
-      // 下記は分割代入での入れ替え
       let temp = clone[i];
       clone[i] = clone[j];
       clone[j] = temp;
@@ -315,7 +314,7 @@
       filtered = shuffleArray(filtered);
     }
 
-    countContainer.textContent = filtered.length;
+    countContainer.textContent = filtered.length.toLocaleString();
 
     // ブラウザのフリーズを防ぐため、表示上限を最大2000件に設定
     const fragment = document.createDocumentFragment();
