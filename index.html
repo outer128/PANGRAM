@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>50音除外検索（豚辞書）</title>
+<title>50音除外検索</title>
 <style>
   body {
     font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
@@ -39,9 +39,9 @@
   }
   /* ボタンが押された状態（除外状態） */
   .btn.active {
-    background-color: #ff6b6b;
+    background-color: #000;
     color: white;
-    border-color: #ff6b6b;
+    border-color: #000;
   }
   .btn:active {
     transform: scale(0.95);
@@ -84,11 +84,11 @@
 <script>
   // 50音の配列（空欄は null）
   const kanaList = [
-    null, 'わ', 'ら', 'や', 'ま', 'は', 'な', 'た', 'さ', 'か', 'あ',
+    'ん', 'わ', 'ら', 'や', 'ま', 'は', 'な', 'た', 'さ', 'か', 'あ',
     null, null, 'り', null, 'み', 'ひ', 'に', 'ち', 'し', 'き', 'い',
     null, null, 'る', 'ゆ', 'む', 'ふ', 'ぬ', 'つ', 'す', 'く', 'う',
     null, null, 'れ', null, 'め', 'へ', 'ね', 'て', 'せ', 'け', 'え',
-    'ん', 'を', 'ろ', 'よ', 'も', 'ほ', 'の', 'と', 'そ', 'こ', 'お'
+    null, 'を', 'ろ', 'よ', 'も', 'ほ', 'の', 'と', 'そ', 'こ', 'お'
   ];
 
   // 除外する文字を保持するセット
