@@ -47,7 +47,27 @@
     transform: scale(0.95);
   }
   .btn.empty {
-    visibility: hidden; /* 空白マス用 */
+    visibility: hidden; 
+  }
+  .control-panel {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    padding: 10px;
+    border-top: 1px solid #eee;
+  }
+  #reset-btn {
+    padding: 10px 30px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+  }
+  #reset-btn:hover {
+    background-color: #444;
   }
   #result-info {
     font-size: 1.1em;
@@ -70,12 +90,16 @@
 </head>
 <body>
 
-<h2>50音除外検索（豚辞書）</h2>
-<p>ボタンを押して赤色にすると、その文字を<strong>含まない</strong>単語のみを抽出します。（複数選択可能）</p>
+<h2>50音除外検索</h2>
+<p>ボタンを押すと、その文字を<strong>含まない</strong>単語のみを抽出します。（複数選択可能）</p>
 <small>※あらかじめ「文字の重複がある」「ー（伸ばし棒）を含む」「濁音・半濁音を含む」言葉は辞書から除外されています。</small></p>
 
 <div class="grid-container">
   <div id="kana-grid"></div>
+</div>
+
+<div class="control-panel">
+  <button id="reset-btn">選択をすべてリセット</button>
 </div>
 
 <div id="result-info">結果: <span id="result-count">0</span>件</div>
@@ -156,6 +180,18 @@
       grid.appendChild(div);
     });
   }
+
+
+  // リセット機能
+  document.getElementById('reset-btn').onclick = () => {
+    excludedKana.clear();
+    // すべてのボタンから active クラスを消す
+    document.querySelectorAll('.btn.active').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    updateWordList();
+  };
+
 
   // 単語リストのフィルタリングと表示更新
   function updateWordList() {
