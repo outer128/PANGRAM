@@ -145,8 +145,6 @@
       <option value="6">6</option>
       <option value="7">7</option>
       <option value="8">8</option>
-      <option value="9">9</option>
-      <option value="10">10以上</option>
     </select>
     文字の単語を表示する
   </div>
@@ -223,7 +221,7 @@
     updateWordList();
   };
 
-  // ★重要：即時反映のためのイベントリスナー
+  // 即時反映のためのイベントリスナー
   document.getElementById('random-toggle').onchange = () => updateWordList();
   document.getElementById('length-filter').onchange = () => updateWordList();
 
@@ -262,12 +260,7 @@
       
       // 文字数のチェック
       if (lengthVal !== 'all') {
-        const targetLen = parseInt(lengthVal);
-        if (targetLen === 10) {
-          if (word.length < 10) return false;
-        } else {
-          if (word.length !== targetLen) return false;
-        }
+        if (word.length !== parseInt(lengthVal)) return false;
       }
       
       return true;
