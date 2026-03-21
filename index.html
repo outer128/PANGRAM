@@ -7,7 +7,7 @@
 <style>
   body {
     font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
-    max-width: 600px;
+    max-width: 700px;
     margin: 0 auto;
     padding: 20px;
     color: #333;
@@ -16,17 +16,17 @@
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
+    overflow-x: auto;
   }
   #kana-grid {
     display: grid;
-    /* 5列のグリッドを作成 */
-    grid-template-columns: repeat(5, 50px);
-    gap: 8px;
+    grid-template-columns: repeat(11, 45px);
+    gap: 6px;
   }
   .btn {
-    width: 50px;
-    height: 50px;
-    font-size: 1.2em;
+    width: 45px;
+    height: 45px;
+    font-size: 1.1em;
     cursor: pointer;
     border: 2px solid #ccc;
     background-color: #fff;
@@ -72,6 +72,7 @@
 
 <h2>50音除外検索（豚辞書）</h2>
 <p>ボタンを押して赤色にすると、その文字を<strong>含まない</strong>単語のみを抽出します。（複数選択可能）</p>
+<small>※あらかじめ「文字の重複がある」「ー（伸ばし棒）を含む」「濁音・半濁音を含む」言葉は辞書から除外されています。</small></p>
 
 <div class="grid-container">
   <div id="kana-grid"></div>
@@ -83,40 +84,47 @@
 <script>
   // 50音の配列（空欄は null）
   const kanaList = [
-    'あ', 'い', 'う', 'え', 'お',
-    'か', 'き', 'く', 'け', 'こ',
-    'さ', 'し', 'す', 'せ', 'そ',
-    'た', 'ち', 'つ', 'て', 'と',
-    'な', 'に', 'ぬ', 'ね', 'の',
-    'は', 'ひ', 'ふ', 'へ', 'ほ',
-    'ま', 'み', 'む', 'め', 'も',
-    'や', null, 'ゆ', null, 'よ',
-    'ら', 'り', 'る', 'れ', 'ろ',
-    'わ', null, null, null, 'を',
-    'ん', null, null, null, null
+    null, 'わ', 'ら', 'や', 'ま', 'は', 'な', 'た', 'さ', 'か', 'あ',
+    null, null, 'り', null, 'み', 'ひ', 'に', 'ち', 'し', 'き', 'い',
+    null, null, 'る', 'ゆ', 'む', 'ふ', 'ぬ', 'つ', 'す', 'く', 'う',
+    null, null, 'れ', null, 'め', 'へ', 'ね', 'て', 'せ', 'け', 'え',
+    'ん', 'を', 'ろ', 'よ', 'も', 'ほ', 'の', 'と', 'そ', 'こ', 'お'
   ];
 
   // 除外する文字を保持するセット
   const excludedKana = new Set();
   let dictionary = [];
 
-  // 辞書ファイルの読み込み
+
+  // 辞書ファイルの読み込みと事前フィルタリング
   async function loadDictionary() {
     try {
-      // 同一階層にある buta014.dic を取得
       const response = await fetch('buta014.dic');
       if (!response.ok) throw new Error('Network response was not ok');
       
       const buffer = await response.arrayBuffer();
-      
-      // 辞書の文字コードを指定（テキストファイルがShift_JISの場合は 'shift_jis'、UTF-8なら 'utf-8' に変更）
-      // 一般的な .dic ファイルは Shift_JIS が多いためデフォルトで指定しています。
-      // もし文字化けする場合はここを 'utf-8' に書き換えてください。
       const decoder = new TextDecoder('shift_jis'); 
       const text = decoder.decode(buffer);
       
-      // 改行で分割して配列化し、空行を削除
-      dictionary = text.split(/\r?\n/).map(w => w.trim()).filter(w => w.length > 0);
+      // 改行で分割し、条件に合わないものをあらかじめ除外する
+      dictionary = text.split(/\r?\n/)
+        .map(w => w.trim())
+        .filter(w => w.length > 0)
+        .filter(w => {
+          // 1. 「ー（伸ばし棒）」を含む言葉を除外
+          if (w.includes('ー')) return false;
+
+          // 2. 濁音・半濁音を含む言葉を除外
+          if (/[がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ]/.test(w)) return false;
+
+          // 3. 同じひらがなが重複して使われている言葉を除外
+          const chars = w.split('');
+          const uniqueChars = new Set(chars);
+          if (uniqueChars.size !== chars.length) return false;
+
+          // 上記の条件をすべてクリアしたものだけを残す
+          return true;
+        });
       
       updateWordList();
     } catch (error) {
@@ -136,14 +144,13 @@
         div.onclick = () => {
           div.classList.toggle('active');
           if (excludedKana.has(kana)) {
-            excludedKana.delete(kana); // すでに除外されていれば解除
+            excludedKana.delete(kana);
           } else {
-            excludedKana.add(kana);    // 除外リストに追加
+            excludedKana.add(kana);
           }
-          updateWordList(); // 表示を随時更新
+          updateWordList();
         };
       } else {
-        // 「や行」「わ行」などの空白マス
         div.className = 'btn empty';
       }
       grid.appendChild(div);
@@ -159,6 +166,7 @@
 
     if (dictionary.length === 0) {
       listContainer.textContent = 'データがありません。';
+      countContainer.textContent = '0';
       return;
     }
 
@@ -166,15 +174,15 @@
     const filtered = dictionary.filter(word => {
       for (const kana of excludedKana) {
         if (word.includes(kana)) {
-          return false; // 含まれていたら除外
+          return false;
         }
       }
-      return true; // 含まれていなければOK
+      return true;
     });
 
     countContainer.textContent = filtered.length;
 
-    // 件数が多いとブラウザがフリーズするため、表示上限を設ける（最大2000件）
+    // ブラウザのフリーズを防ぐため、表示上限を最大2000件に設定
     const fragment = document.createDocumentFragment();
     const displayLimit = Math.min(filtered.length, 2000); 
     
