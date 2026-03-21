@@ -238,6 +238,7 @@
   function updateWordList() {
     const listContainer = document.getElementById('word-list');
     const countContainer = document.getElementById('result-count');
+    const isRandom = document.getElementById('random-toggle').checked;
     
     listContainer.innerHTML = '';
 
@@ -245,6 +246,10 @@
       listContainer.textContent = 'データがありません。';
       countContainer.textContent = '0';
       return;
+    }
+
+    if (isRandom && filtered.length > 0) {
+      filtered = shuffleArray(filtered);
     }
 
     // 押されたボタンのひらがなを「1つも含まない」単語だけを残す
