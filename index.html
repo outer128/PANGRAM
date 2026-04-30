@@ -55,8 +55,8 @@
     padding: 10px;
     border-top: 1px solid #eee;
   }
-  #reset-btn {
-    padding: 10px 30px;
+  #reset-btn, #select-all-btn {
+    padding: 10px 20px;
     font-size: 1em;
     cursor: pointer;
     background-color: #666;
@@ -64,8 +64,9 @@
     border: none;
     border-radius: 5px;
     transition: background-color 0.2s;
+    margin: 0 5px;
   }
-  #reset-btn:hover {
+  #reset-btn:hover, #select-all-btn:hover {
     background-color: #444;
   }
   .options-container {
@@ -123,7 +124,8 @@
 </div>
 
 <div class="control-panel">
-  <button id="reset-btn">選択をすべてリセット</button>
+  <button id="select-all-btn">全て選択</button>
+  <button id="reset-btn">リセット</button>
 </div>
 
 <div id="result-info">結果: <span id="result-count">0</span>件</div>
@@ -214,6 +216,15 @@
       grid.appendChild(div);
     });
   }
+
+  // 全て選択ボタンの処理を追加
+  document.getElementById('select-all-btn').onclick = () => {
+    document.querySelectorAll('.btn:not(.empty)').forEach(btn => {
+      btn.classList.add('active');
+      excludedKana.add(btn.textContent);
+    });
+    updateWordList();
+  };
 
   document.getElementById('reset-btn').onclick = () => {
     excludedKana.clear();
