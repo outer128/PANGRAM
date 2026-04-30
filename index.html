@@ -6,16 +6,29 @@
 <title>50音除外検索</title>
 <style>
   body {
-    font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
-    max-width: 700px;
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    max-width: 800px;
     margin: 0 auto;
     padding: 20px;
     color: #333;
+    background-color: #f5f5f7;
   }
+  
+  .container {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  }
+  h2 { margin-top: 0; color: #1d1d1f; }
+  
   .grid-container {
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    background: #e5e5e7;
+    padding: 15px;
+    border-radius: 12px;
     overflow-x: auto;
   }
   #kana-grid {
@@ -23,136 +36,170 @@
     grid-template-columns: repeat(11, 45px);
     gap: 6px;
   }
+
   .btn {
     width: 45px;
-    height: 45px;
+    height: 50px;
     font-size: 1.1em;
+    font-weight: bold;
     cursor: pointer;
-    border: 2px solid #ccc;
+    border: 1px solid #c1c1c3;
     background-color: #fff;
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     user-select: none;
-    transition: 0.1s;
+    transition: all 0.1s;
+    box-shadow: 0 2px 0 #c1c1c3;
   }
   .btn.active {
-    background-color: #000;
+    background-color: #333;
     color: white;
-    border-color: #000;
+    border-color: #333;
+    box-shadow: 0 1px 0 #000;
+    transform: translateY(1px);
   }
   .btn:active {
-    transform: scale(0.95);
+    transform: translateY(2px);
+    box-shadow: none;
   }
   .btn.empty {
     visibility: hidden; 
+    box-shadow: none;
+    border: none;
   }
+
   .control-panel {
     display: flex;
     justify-content: center;
+    gap: 15px;
     margin: 20px 0;
-    padding: 10px;
+    padding: 20px 0;
     border-top: 1px solid #eee;
   }
-  #reset-btn, #select-all-btn {
-    padding: 10px 20px;
+  .action-btn {
+    padding: 12px 25px;
     font-size: 1em;
+    font-weight: bold;
     cursor: pointer;
-    background-color: #666;
-    color: white;
     border: none;
-    border-radius: 5px;
-    transition: background-color 0.2s;
-    margin: 0 5px;
+    border-radius: 8px;
+    transition: opacity 0.2s;
+    color: white;
   }
-  #reset-btn:hover, #select-all-btn:hover {
-    background-color: #444;
-  }
+  #select-all-btn { background-color: #007aff; } 
+  #reset-btn { background-color: #86868b; }      
+  .action-btn:hover { opacity: 0.8; }
+
   .options-container {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    justify-content: center;
   }
   .option-item {
-    font-size: 1em;
+    font-size: 0.95em;
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #f0f0f0;
-    padding: 8px 15px;
-    border-radius: 20px;
-    width: fit-content;
+    background: #f0f0f2;
+    padding: 10px 18px;
+    border-radius: 25px;
     user-select: none;
   }
   .option-item input, .option-item select {
     cursor: pointer;
   }
   select {
-    padding: 2px 5px;
-    border-radius: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
     border: 1px solid #ccc;
   }
+
   #result-info {
-    font-size: 1.1em;
-    margin-bottom: 10px;
+    font-size: 1.2em;
+    margin-bottom: 12px;
     font-weight: bold;
+    text-align: center;
+    color: #1d1d1f;
   }
   #word-list {
-    max-height: 500px;
+    max-height: 450px;
     overflow-y: auto;
-    border: 1px solid #ddd;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border-radius: 4px;
+    border: 1px solid #e5e5e7;
+    padding: 15px;
+    background-color: #fafafa;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
   }
   .word-item {
-    padding: 4px 0;
-    border-bottom: 1px dashed #eee;
+    padding: 6px 10px;
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    font-size: 1.05em;
+    text-align: center;
+  }
+  .word-item.full-width {
+    grid-column: 1 / -1;
+    background: transparent;
+    border: none;
+    color: #888;
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 15px; }
+    .btn { width: 32px; height: 45px; font-size: 1em; }
+    #kana-grid { grid-template-columns: repeat(11, 32px); gap: 4px; }
+    .action-btn { padding: 10px 15px; flex: 1; }
+    #word-list { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
   }
 </style>
 </head>
 <body>
 
-<h2>50音除外検索</h2>
-<p>ボタンを押すと、その文字を<strong>含まない</strong>単語のみを抽出します。（複数選択可能）</p>
-<p><small>※「文字の重複がある」「ー（伸ばし棒）を含む」「濁音・半濁音を含む」言葉は辞書から除外されています。</small></p>
+<div class="container">
+  <h2>50音除外検索</h2>
+  <p>ボタンを押すと、その文字を<strong>含まない</strong>単語のみを抽出します。（複数選択可能）</p>
+  <p><small>※「文字の重複がある」「ー（伸ばし棒）を含む」「濁音・半濁音を含む」言葉は辞書から除外されています。</small></p>
 
-<div class="grid-container">
-  <div id="kana-grid"></div>
-</div>
+  <div class="grid-container">
+    <div id="kana-grid"></div>
+  </div>
 
-<div class="control-panel">
-  <button id="select-all-btn">全て選択</button>
-  <button id="reset-btn">リセット</button>
-</div>
+  <div class="control-panel">
+    <button id="select-all-btn" class="action-btn">全て選択</button>
+    <button id="reset-btn" class="action-btn">リセット</button>
+  </div>
 
-<div id="result-info">結果: <span id="result-count">0</span>件</div>
+  <div id="result-info">結果: <span id="result-count">0</span>件</div>
 
-<div class="options-container">
-  <div style="margin-bottom: 5px;">
+  <div class="options-container">
     <label class="option-item">
-      <input type="checkbox" id="random-toggle"> 結果をランダムな順で表示する
+      <input type="checkbox" id="random-toggle"> ランダム順で表示
     </label>
-  </div>
 
-  <div class="option-item">
-    <select id="length-filter">
-      <option value="all">すべて</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-      <option value="7">7</option>
-      <option value="8">8</option>
-    </select>
-    文字の単語を表示する
+    <div class="option-item">
+      <select id="length-filter">
+        <option value="all">すべて</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+      </select>
+      文字の単語を表示
+    </div>
   </div>
+    
+  <div id="word-list">辞書ファイル（buta014.dic）を読み込み中...</div>
 </div>
-  
-<div id="word-list">辞書ファイル（buta014.dic）を読み込み中...</div>
 
 <script>
   // 50音の配列
@@ -190,6 +237,7 @@
       updateWordList();
     } catch (error) {
       document.getElementById('word-list').textContent = '辞書の読み込みに失敗しました。';
+      document.getElementById('word-list').style.display = 'block'; // エラー時はグリッド表示を解除
       console.error('Fetch error:', error);
     }
   }
@@ -217,7 +265,7 @@
     });
   }
 
-  // 全て選択ボタンの処理を追加
+  // 全て選択ボタンの処理
   document.getElementById('select-all-btn').onclick = () => {
     document.querySelectorAll('.btn:not(.empty)').forEach(btn => {
       btn.classList.add('active');
@@ -258,22 +306,21 @@
 
     if (dictionary.length === 0) {
       listContainer.textContent = 'データがありません。';
+      listContainer.style.display = 'block';
       countContainer.textContent = '0';
       return;
+    } else {
+      listContainer.style.display = 'grid'; // データがある時はグリッド表示
     }
 
     // フィルタリング
     let filtered = dictionary.filter(word => {
-      // 除外文字のチェック
       for (const kana of excludedKana) {
         if (word.includes(kana)) return false;
       }
-      
-      // 文字数のチェック
       if (lengthVal !== 'all') {
         if (word.length !== parseInt(lengthVal)) return false;
       }
-      
       return true;
     });
 
@@ -296,11 +343,11 @@
     
     listContainer.appendChild(fragment);
     
+    // 表示上限に達した場合のメッセージ
     if (filtered.length > displayLimit) {
       const moreMsg = document.createElement('div');
-      moreMsg.className = 'word-item';
+      moreMsg.className = 'word-item full-width'; // 全幅に広げるためのクラスを追加
       moreMsg.textContent = `...他 ${filtered.length - displayLimit} 件（表示上限2000件）`;
-      moreMsg.style.color = '#888';
       listContainer.appendChild(moreMsg);
     }
   }
